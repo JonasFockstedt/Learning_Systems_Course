@@ -42,6 +42,7 @@ Xtest_reduced = pca.fit_transform(Xtest_normalized)
 print(f'Shape of transformed Xtrain: {Xtrain_reduced.shape}')
 print(f'Shape of transformed Xtest: {Xtest_reduced.shape}')
 
+'''
 fig, ax = plt.subplots()
 #ax.scatter(Xtrain_reduced[:,0],Ytrain)
 ax.scatter(Xtrain_reduced[:,0],Xtrain_reduced[:,1])
@@ -49,7 +50,7 @@ ax.set_ylabel('Valve Process')
 ax.set_xlabel('Time')
 plt.legend()
 plt.show()
-
+'''
 optimal_PCA_numbers = dict()
 grid_searches = dict()
 cv_scores = dict()
@@ -76,7 +77,7 @@ def findOptimalNumberOfFeatures():
         # Where to place the subplot.
         ax = fig.add_subplot(3, 2, fig_number)
 
-        for number_of_components in range(1, 100):
+        for number_of_components in range(1, 65):
             # Update components for PCA.
             pca = PCA(n_components=number_of_components)
             Xtrain_reduced = pca.fit_transform(Xtrain_normalized)
@@ -100,10 +101,10 @@ def findOptimalNumberOfFeatures():
         mse = np.array(mse)
         standard_deviations = np.array(standard_deviations)
         # Plots the MSE.
-        ax.plot(np.arange(1, 100, 1), mse, marker='.', color='blue',
+        ax.plot(np.arange(1, 65, 1), mse, marker='.', color='blue',
                 label=f'Optimal PCAs: {optimal_components} at MSE of {lowest_mse}.')
         # Plots standard deviation with half opacity.
-        ax.fill_between(np.arange(1, 100, 1), mse + standard_deviations, mse - standard_deviations,
+        ax.fill_between(np.arange(1, 65, 1), mse + standard_deviations, mse - standard_deviations,
                         alpha=0.5, facecolor='blue')
         ax.set_ylabel('MSE')
         ax.title.set_text(f'{type(regression_models[model]).__name__}')
