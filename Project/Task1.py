@@ -108,6 +108,7 @@ def findOptimalNumberOfFeatures():
         ax.title.set_text(f'{type(regression_models[model]).__name__}')
         ax.legend()
 
+    plt.title('MSE based on number of features')
     plt.xlabel('Number of PCAs')
     plt.show(block=False)
 
@@ -147,6 +148,21 @@ def plotCVScores():
         plt.text(bar.get_x(), yval + 0.05, yval)
     plt.show()
 
+def trainModel():
+    # Fetch best performing model.
+    the_model = grid_searches[max(cv_scores, key=cv_scores.get)]
+    # Fetch the number of optimal features for the model.
+    pca = PCA(n_components=optimal_PCA_numbers[str(type(the_model).__name__)])
+    Xtest_reduced = pca.fit_transform(Xtest_normalized)
+    predicted_model = the_model.predict(Xtest_reduced)
+    
+    plt.title(f'Predicted output based on {type(the_model).__name__}')
+    plt.xlabel('Observation number')
+    plt.ylabel('Cetane number')
+    plt.plot(predicted_model, color='red')
+    plt.show()
+    
+
 if __name__ == '__main__':
     print('***FINDING OPTIMAL NUMBER OF FEATURES FOR EACH MODEL...***')
     findOptimalNumberOfFeatures()
@@ -154,3 +170,4 @@ if __name__ == '__main__':
     parameterTuning()
     plt.show()
     plotCVScores()
+    trainModel()
