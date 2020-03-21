@@ -2,9 +2,8 @@ import numpy as np
 from scipy.io import loadmat
 from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.decomposition import PCA, KernelPCA
-from sklearn.model_selection import KFold, ShuffleSplit, cross_val_score, train_test_split, GridSearchCV
+from sklearn.model_selection import KFold, cross_val_score, train_test_split, GridSearchCV
 import matplotlib.pylab as plt
-import matplotlib as mpl
 from sklearn.preprocessing import StandardScaler, normalize, Normalizer
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.svm import SVR
@@ -32,7 +31,7 @@ print(f'Shape of Ytrain: {Ytrain.shape}')
 Xtrain, Xval, Ytrain, Yval = train_test_split(
     Xtrain, Ytrain, test_size=0.2, random_state=42)
 
-# Below normalization gives a slightly worse MSE.
+# Below normalization gives a slightly worse MSE. Should investigate why.
 #transformer = Normalizer()
 #Xtrain_normalized = transformer.transform(Xtrain)
 #Xtest_normalized = transformer.transform(Xtest)
@@ -52,6 +51,7 @@ print(f'Shape of transformed Xtest: {Xtest_reduced.shape}')
 
 optimal_PCA_numbers = dict()
 grid_searches = dict()
+cv_scores = dict()
 regression_models = {'LinearRegression': LinearRegression(n_jobs=-1), 'SVR': SVR(), 'DecisionTreeRegressor': DecisionTreeRegressor(), 'MLPRegressor': MLPRegressor(), 'KNeighborsRegressor': KNeighborsRegressor(n_jobs=-1), 'Ridge': Ridge()}
 
 
@@ -62,11 +62,12 @@ def findOptimalNumberOfFeatures():
     standard_deviations = []
     
     fig.subplots_adjust(hspace=.5)
+    rndm_state = randint(0, 100)
 
     for fig_number, model in enumerate(regression_models.keys(), 1):
-        print(f'Running {type(regression_models[model]).__name__} model...')
+        print(f'Finding optimal number of features for {type(regression_models[model]).__name__} model...')
         # Things to set up for every model.
-        kf_10 = KFold(n_splits=10, shuffle=True, random_state=randint(0, 100))
+        kf_10 = KFold(n_splits=10, shuffle=True, random_state=rndm_state)
         optimal_PCA_numbers.update({type(regression_models[model]).__name__: 0})
         mse, standard_deviations = [], []
         optimal_components = 0
@@ -129,11 +130,22 @@ def parameterTuning():
         pca = PCA(n_components=optimal_PCA_numbers[model])
         Xtrain_reduced = pca.fit_transform(Xtrain_normalized)
         # Perform grid search.
-        regr = GridSearchCV(regression_models[model], parameters[model], n_jobs=-1)
+        regr = GridSearchCV(regression_models[model], parameters[model], scoring='neg_root_mean_squared_error', n_jobs=-1, cv=10)
         regr.fit(Xtrain_reduced, Ytrain)
         # Add best parameter combination to dictionary.
         grid_searches.update({type(regression_models[model]).__name__: regr.best_estimator_})
+        # Add score of best parameters to dictionary
+        cv_scores.update({type(regression_models[model]).__name__: regr.best_score_})
 
+def plotCVScores():
+    plt.ylabel('Mean squared error regression loss (higher is better)')
+    plt.title('Cross-validation scores of regression models')
+    bars = plt.bar(list(cv_scores.keys()), list(cv_scores.values()), align='center')
+    # Add value above every bar.
+    for bar in bars:
+        yval = bar.get_height()
+        plt.text(bar.get_x(), yval + 0.05, yval)
+    plt.show()
 
 if __name__ == '__main__':
     print('***FINDING OPTIMAL NUMBER OF FEATURES FOR EACH MODEL...***')
@@ -141,3 +153,4 @@ if __name__ == '__main__':
     print('***FINDING OPTIMAL PARAMETERS FOR THE MODELS...***')
     parameterTuning()
     plt.show()
+    plotCVScores()
