@@ -31,29 +31,14 @@ print(f'Shape of Ytrain: {Ytrain.shape}')
 Xtrain, Xval, Ytrain, Yval = train_test_split(
     Xtrain, Ytrain, test_size=0.2, random_state=42)
 
-# Below normalization gives a slightly worse MSE. Should investigate why.
-#transformer = Normalizer()
-#Xtrain_normalized = transformer.transform(Xtrain)
-#Xtest_normalized = transformer.transform(Xtest)
-
 # Normalize data.
 Xtrain_normalized = normalize(Xtrain)
 Xtest_normalized = normalize(Xtest)
-
-#pca = KernelPCA(n_components=2, kernel='cosine').fit(Xtrain_normalized)
-pca = PCA()
-
-Xtrain_reduced = pca.fit_transform(Xtrain)
-Xtest_reduced = pca.fit_transform(Xtest)
-
-print(f'Shape of transformed Xtrain: {Xtrain_reduced.shape}')
-print(f'Shape of transformed Xtest: {Xtest_reduced.shape}')
 
 optimal_PCA_numbers = dict()
 grid_searches = dict()
 cv_scores = dict()
 regression_models = {'LinearRegression': LinearRegression(n_jobs=-1), 'SVR': SVR(), 'DecisionTreeRegressor': DecisionTreeRegressor(), 'MLPRegressor': MLPRegressor(), 'KNeighborsRegressor': KNeighborsRegressor(n_jobs=-1), 'Ridge': Ridge()}
-
 
 
 def findOptimalNumberOfFeatures():
@@ -108,7 +93,6 @@ def findOptimalNumberOfFeatures():
         ax.title.set_text(f'{type(regression_models[model]).__name__}')
         ax.legend()
 
-    plt.title('MSE based on number of features')
     plt.xlabel('Number of PCAs')
     plt.show(block=False)
 
@@ -153,6 +137,13 @@ def trainModel():
     the_model = grid_searches[max(cv_scores, key=cv_scores.get)]
     # Fetch the number of optimal features for the model.
     pca = PCA(n_components=optimal_PCA_numbers[str(type(the_model).__name__)])
+
+    Xval_reduced = pca.fit_transform(Xval)
+    kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
+    # Run 10-fold cross validation.
+    score = cross_val_score(the_model, Xval_reduced, Yval.ravel(), cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()
+    print(f'Validation score of the {type(the_model).__name__} model: {score} (MSE).')
+
     Xtest_reduced = pca.fit_transform(Xtest_normalized)
     predicted_model = the_model.predict(Xtest_reduced)
     
@@ -170,4 +161,5 @@ if __name__ == '__main__':
     parameterTuning()
     plt.show()
     plotCVScores()
+    print('***TRAINING THE FINAL MODEL***')
     trainModel()
