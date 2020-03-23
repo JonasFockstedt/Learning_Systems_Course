@@ -27,6 +27,9 @@ print(f'Shape of Xtest: {X_power_test.shape}')
 print(f'Shape of Xdate: {X_date_train.shape}')
 print(f'Shape of Ytrain: {Y_power_train.shape}')
 
+# Split training data.
+X_power_train, X_power_val, Y_power_train, Y_power_val = train_test_split(X_power_train, Y_power_train, test_size=0.2, random_state=42)
+
 X_power_train_normalized = normalize(X_power_train)
 X_power_train_scaled = MinMaxScaler().fit_transform(X_power_train)
 
@@ -148,11 +151,30 @@ def plotCVScores():
         plt.text(bar.get_x(), yval + 0.05, yval)
     plt.show()
 
+def trainBestModel():
+    # Fetch the best performing model.
+    best_model = grid_searches[max(cv_scores, key=cv_scores.get)]
+
+    # Normalize validation data.
+    X_power_val_normalized = normalize(X_power_val)
+    kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
+    # Run 10-fold cross validation.
+    score = -1*cross_val_score(best_model, X_power_val_normalized, Y_power_val.ravel(), cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()
+    print(f'Averagealidation score of the {type(best_model).__name__} model: {score} (MSE).')
+
+    X_power_test_normalized = normalize(X_power_test)
+    predicted_model = best_model.predict(X_power_test_normalized)
+    
+    plt.title(f'Predicted output based on {type(best_model).__name__}')
+    plt.xlabel('Hour')
+    plt.ylabel('Power load (MW)')
+    plt.plot(predicted_model, color='red')
+    plt.show()
 
 if __name__ == '__main__':
-    #trainModels()
     findOptimalNumberOfFeatures()
     #plotMSEScores()
     parameterTuning()
-    plotCVScores()
+    #plotCVScores()
+    trainBestModel()
     print(f'Runtime: {timeit.default_timer() - start_time}s')
