@@ -141,7 +141,7 @@ def parameterTuning():
 
 
 def plotCVScores():
-    plt.ylabel('Mean squared error regression loss (higher is better)')
+    plt.ylabel('Mean squared error regression loss')
     plt.title('Cross-validation scores of regression models')
     bars = plt.bar(list(cv_scores.keys()), list(
         cv_scores.values()), align='center')
@@ -166,12 +166,13 @@ def trainBestModel():
         f'Averagealidation score of the {type(best_model).__name__} model: {score} (MSE).')
 
     X_power_test_normalized = normalize(X_power_test)
-    predicted_model = best_model.predict(X_power_test_normalized)
+    predictions = best_model.predict(X_power_test_normalized)
+    print(f'Predictions: \n{predictions}')
 
     plt.title(f'Predicted output based on {type(best_model).__name__}')
     plt.xlabel('Hour')
     plt.ylabel('Power load (MW)')
-    plt.plot(predicted_model, color='red')
+    plt.plot(predictions, color='red')
     plt.show()
 
 

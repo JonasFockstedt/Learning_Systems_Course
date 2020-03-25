@@ -142,15 +142,16 @@ def trainModel():
     kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
     # Run 10-fold cross validation.
     score = cross_val_score(the_model, Xval_reduced, Yval.ravel(), cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()
-    print(f'Validation score of the {type(the_model).__name__} model: {score} (MSE).')
+    print(f'Mean validation score of the {type(the_model).__name__} model: {score} (MSE).')
 
     Xtest_reduced = pca.fit_transform(Xtest_normalized)
-    predicted_model = the_model.predict(Xtest_reduced)
+    predictions = the_model.predict(Xtest_reduced)
     
+    print(f'Predictions: \n{predictions}')
     plt.title(f'Predicted output based on {type(the_model).__name__}')
     plt.xlabel('Observation number')
     plt.ylabel('Cetane number')
-    plt.plot(predicted_model, color='red')
+    plt.plot(predictions, color='red')
     plt.show()
     
 

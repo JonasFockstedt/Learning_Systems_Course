@@ -31,8 +31,6 @@ X_train_normalized = normalize(X_train)
 #X_train_scaled = MinMaxScaler().fit_transform(X_train)
 X_train_scaled = StandardScaler().fit_transform(X_train)
 
-pca = PCA(n_components=2)
-X_train_reduced = pca.fit_transform(X_train_scaled)
 
 classification_models = {'KNeighborsClassifier': KNeighborsClassifier(n_jobs=-1), 'DecisionTreeClassifier': DecisionTreeClassifier(),
                          'RandomForestClassifier': RandomForestClassifier(n_jobs=-1), 'SVC': SVC(), 'LogisticRegression': LogisticRegression(n_jobs=-1), 'MLPClassifier': MLPClassifier()}
@@ -63,7 +61,7 @@ def findOptimalFeatures():
         for number_of_components in range(1, X_train.shape[1] + 1):
             # Update components for PCA.
             pca = PCA(n_components=number_of_components)
-            Xtrain_reduced = pca.fit_transform(X_train_normalized)
+            Xtrain_reduced = pca.fit_transform(X_train)
             # Run 10-fold cross validation.
             score = 100*cross_val_score(classification_models[model], Xtrain_reduced, Y_train.ravel(),
                                         cv=kf_10, scoring='accuracy', n_jobs=-1).mean()
@@ -129,7 +127,7 @@ def parameterTuning():
         # Perform grid search.
         classifier = GridSearchCV(
             classification_models[model], parameters[model], scoring='accuracy', n_jobs=-1, cv=10)
-        classifier.fit(X_train_normalized, Y_train.ravel())
+        classifier.fit(X_train, Y_train.ravel())
         print(classifier.best_estimator_)
         print(classifier.best_score_)
         # Add best parameter combination to dictionary.
@@ -158,15 +156,15 @@ def trainBestModel():
     X_val_normalized = normalize(X_val)
     kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
     # Run 10-fold cross validation.
-    score = 100*cross_val_score(best_model, X_val_normalized,
+    score = 100*cross_val_score(best_model, X_val,
                                 Y_val.ravel(), cv=kf_10, scoring='accuracy', n_jobs=-1).mean()
     print(
         f'Average validation score of the {type(best_model).__name__} model: {score} (accuracy %).')
 
     X_test_normalized = normalize(X_test)
-    predicted_model = best_model.predict(X_test_normalized)
+    predictions = best_model.predict(X_test)
 
-    print(predicted_model)
+    print(f'Prediction: \n{predictions}')
 
 
 if __name__ == '__main__':
