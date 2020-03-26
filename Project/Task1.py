@@ -138,7 +138,8 @@ def trainModel():
     # Fetch the number of optimal features for the model.
     pca = PCA(n_components=optimal_PCA_numbers[str(type(the_model).__name__)])
 
-    Xval_reduced = pca.fit_transform(Xval)
+    Xval_normalized = normalize(Xval)
+    Xval_reduced = pca.fit_transform(Xval_normalized)
     kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
     # Run 10-fold cross validation.
     score = cross_val_score(the_model, Xval_reduced, Yval.ravel(), cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()

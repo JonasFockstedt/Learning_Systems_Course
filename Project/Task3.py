@@ -163,7 +163,7 @@ def trainBestModel():
     score = -1*cross_val_score(best_model, X_power_val_normalized, Y_power_val.ravel(),
                                cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()
     print(
-        f'Averagealidation score of the {type(best_model).__name__} model: {score} (MSE).')
+        f'Average validation score of the {type(best_model).__name__} model: {score} (MSE).')
 
     X_power_test_normalized = normalize(X_power_test)
     predictions = best_model.predict(X_power_test_normalized)
@@ -180,6 +180,6 @@ if __name__ == '__main__':
     findOptimalNumberOfFeatures()
     # plotMSEScores()
     parameterTuning()
-    # plotCVScores()
+    plotCVScores()
     trainBestModel()
     print(f'Runtime: {timeit.default_timer() - start_time}s')

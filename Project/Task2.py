@@ -22,6 +22,10 @@ Xtrain = mat["XtrainDS"]
 Ytrain = mat["YtrainDS"]
 Xtest = mat["XtestDS"]
 
+# Remove first column (time)
+Xtrain = np.delete(Xtrain, 0, 1)
+Xtest = np.delete(Xtest, 0, 1)
+
 #print('Xtrain:\n', Xtrain)
 print(f'Shape of Xtrain: {Xtrain.shape}')
 print(f'Shape of Ytrain: {Ytrain.shape}')
@@ -111,7 +115,7 @@ def findOptimalNumberOfFeatures():
         ax.legend()
 
     plt.xlabel('Number of PCAs')
-    plt.show(block=False)
+    plt.show()
 
 
 def parameterTuning():
@@ -133,7 +137,7 @@ def parameterTuning():
         Xtrain_reduced = pca.fit_transform(Xtrain_normalized)
         # Perform grid search.
         regr = GridSearchCV(regression_models[model], parameters[model], scoring='neg_root_mean_squared_error', n_jobs=-1, cv=10)
-        regr.fit(Xtrain_reduced, Ytrain)
+        regr.fit(Xtrain_reduced, Ytrain.ravel())
         # Add best parameter combination to dictionary.
         grid_searches.update({type(regression_models[model]).__name__: regr.best_estimator_})
         # Add score of best parameters to dictionary
@@ -149,10 +153,37 @@ def plotCVScores():
         plt.text(bar.get_x(), yval + 0.05, yval)
     plt.show()
 
+def trainModel():
+    # Fetch best performing model.
+    the_model = grid_searches[max(cv_scores, key=cv_scores.get)]
+    # Fetch the number of optimal features for the model.
+    pca = PCA(n_components=optimal_PCA_numbers[str(type(the_model).__name__)])
+
+    Xval_normalized = normalize(Xval)
+    Xval_reduced = pca.fit_transform(Xval_normalized)
+    kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
+    # Run 10-fold cross validation.
+    score = cross_val_score(the_model, Xval_reduced, Yval.ravel(), cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()
+    print(f'Mean validation score of the {type(the_model).__name__} model: {score} (MSE).')
+
+    Xtest_reduced = pca.fit_transform(Xtest_normalized)
+    predictions = the_model.predict(Xtest_reduced)
+    
+    print(f'Predictions: \n{predictions}')
+    plt.title(f'Predicted output based on {type(the_model).__name__}')
+    plt.xlabel('Time')
+    plt.ylabel('Valve opening')
+    plt.plot(predictions, color='red')
+    plt.show()
+
 if __name__ == '__main__':
     print('***FINDING OPTIMAL NUMBER OF FEATURES FOR EACH MODEL...***')
     findOptimalNumberOfFeatures()
+    print(optimal_PCA_numbers)
     print('***FINDING OPTIMAL PARAMETERS FOR THE MODELS...***')
     parameterTuning()
-    plt.show()
+    print(grid_searches)
+    print(cv_scores)
+    #plt.show()
     plotCVScores()
+    trainModel()
