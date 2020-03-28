@@ -170,9 +170,11 @@ def trainBestModel():
     print(f'Predictions: \n{predictions}')
 
     plt.title(f'Predicted output based on {type(best_model).__name__}')
-    plt.xlabel('Hour')
+    plt.xlabel('Day')
     plt.ylabel('Power load (MW)')
-    plt.plot(predictions, color='red')
+    plt.plot(np.arange(0, len(X_power_test[:,0]), 1), X_power_test[:,0], color='blue', label='Power load today')
+    plt.plot(np.arange(1, len(predictions)+1, 1), predictions, color='red', label='Predicted power load the next day')
+    plt.legend()
     plt.show()
 
 
