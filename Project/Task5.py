@@ -164,7 +164,18 @@ def trainBestModel():
     X_test_normalized = normalize(X_test)
     predictions = best_model.predict(X_test_normalized)
 
+    X_test_virtualize = PCA(n_components=2).fit_transform(X_test)
+    benign = X_test_virtualize[predictions==0]
+    malign = X_test_virtualize[predictions==1]
+
+    plt.scatter(benign[:,0], benign[:,1], color='blue', label='Benign breast cancer')
+    plt.scatter(malign[:,0], malign[:,1], color='red', label='Malign breast cancer')
+    plt.title(f'Predictions based on the {type(best_model).__name__}')
+    plt.xlabel('Principal component 1')
+    plt.ylabel('Principal component 2')
+    plt.legend()
     print(f'Prediction: \n{predictions}')
+    plt.show()
 
 
 if __name__ == '__main__':
