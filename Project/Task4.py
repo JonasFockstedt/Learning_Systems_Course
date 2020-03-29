@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
@@ -11,8 +12,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.cluster import KMeans
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.svm import LinearSVC
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.exceptions import ConvergenceWarning
+
+warnings.filterwarnings("ignore", category=ConvergenceWarning,
+                        module="sklearn")
 
 mat = loadmat("Project Datasets/thyroidTrain.mat")
 
@@ -29,8 +35,6 @@ print(f'Shape of Xtrain: {Xtrain.shape}')
 print(f'Shape of Ytrain: {Ytrain.shape}')
 print(f'Shape of Xtest: {Xtest.shape}')
 
-
-
 #Normalize the data.
 Xtrain_normalized = normalize(Xtrain)
 Xtest_normalized = normalize(Xtest)
@@ -43,29 +47,19 @@ Xtest_reduced = pca.fit_transform(Xtest_normalized)
 print(f'Shape of transformed Xtrain: {Xtrain_reduced.shape}')
 print(f'Shape of transformed Xtest: {Xtest_reduced.shape}')
 
-'''
-fig, ax = plt.subplots()
-#ax.scatter(Xtrain_reduced[:,0],Ytrain)
-ax.scatter(Xtrain_reduced[:,0],Xtrain_reduced[:,1])
-ax.set_ylabel('Valve Process')
-ax.set_xlabel('Time')
-plt.legend()
-plt.show()
-'''
-
 optimal_PCA_numbers = dict()
 grid_searches = dict()
 cv_scores = dict()
-classification_models = {'KNeighborsClassifier': KNeighborsClassifier(), 'LinearSVC': LinearSVC(), 
-                        'LogisticRegression': LogisticRegression(multi_class='ovr'),'DecisionTreeClassifier': DecisionTreeClassifier(), 'RandomForestClassifier': RandomForestClassifier(n_jobs=-1),
+classification_models = {'KNeighborsClassifier': KNeighborsClassifier(),'DecisionTreeClassifier': DecisionTreeClassifier(), 'RandomForestClassifier': RandomForestClassifier(n_jobs=-1),
                         'MLPClassifier': MLPClassifier()}
-acc_scores = {'KNeighborsClassifier': [], 'LinearSVC': [], 'LogisticRegression': [], 
+acc_scores = {'KNeighborsClassifier': [],  
             'DecisionTreeClassifier': [], 'RandomForestClassifier': [], 'MLPClassifier': []}
-standard_deviation_scores = {'KNeighborsClassifier': [], 'LinearSVC': [], 'LogisticRegression': [], 
+standard_deviation_scores = {'KNeighborsClassifier': [],  
             'DecisionTreeClassifier': [], 'RandomForestClassifier': [], 'MLPClassifier': []}
+
+
 def findOptimalNumberOfFeatures():
     print('***FINDING OPTIMAL NUMBER OF FEATURES FOR EACH MODEL***')
-    #rndm_state = randint(0, 100)
 
     for model in classification_models.keys():
         print(
@@ -107,7 +101,7 @@ def plotAccuracyScores():
     fig.subplots_adjust(hspace=.5)
 
     for fig_number, model in enumerate(classification_models.keys(), 1):
-        ax = fig.add_subplot(3, 2, fig_number)
+        ax = fig.add_subplot(2, 2, fig_number)
         acc = np.array(acc_scores[model])
         standard_deviations = np.array(standard_deviation_scores[model])
 
@@ -137,18 +131,15 @@ def parameterTuning():
     parametersMLP = {'solver': ('lbfgs', 'sgd', 'adam'),
                      'alpha': np.arange(0.00005, 0.001, 0.0005)}
 
-# classification_models = {'KNeighborsClassifier': KNeighborsClassifier(), 'LinearSVC': LinearSVC(), 
-#                         'LogisticRegression': LogisticRegression(multi_class='ovr'),'DecisionTreeClassifier': DecisionTreeClassifier(), 'RandomForestClassifier': RandomForestClassifier(n_jobs=-1),
-#                         'MLPClassifier': MLPClassifier()}
-
     parameters = {'KNeighborsClassifier': parametersKNN, 'LinearSVC': parametersSVC, 'LogisticRegression': parametersLR, 'DecisionTreeClassifier': parametersDT,
                   'RandomForestClassifier': parametersRF,  'MLPClassifier': parametersMLP}
+    
     for model in classification_models.keys():
         print(f'Tuning the {model} model...')
         # Perform grid search.
         classifier = GridSearchCV(
             classification_models[model], parameters[model], scoring='accuracy', n_jobs=-1, cv=10)
-        classifier.fit(Xtrain_normalized, Ytrain.ravel())
+        classifier.fit(Xtrain_normalized, Ytrain)
         print(classifier.best_estimator_)
         print(classifier.best_score_)
         # Add best parameter combination to dictionary.
@@ -176,18 +167,30 @@ def trainBestModel():
     kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
     # Run 10-fold cross validation.
     score = 100*cross_val_score(best_model, Xval_normalized,
-                                Yval.ravel(), cv=kf_10, scoring='accuracy', n_jobs=-1).mean()
+                                Yval, cv=kf_10, scoring='accuracy', n_jobs=-1).mean()
     print(
         f'Average validation score of the {type(best_model).__name__} model: {score} (accuracy %).')
 
     Xtest_normalized = normalize(Xtest)
-    predicted_model = best_model.predict(Xtest_normalized)
+    predictions = best_model.predict(Xtest_normalized)
+    X_test_visualize = PCA(n_components=2).fit_transform(Xtest_normalized)
 
-    print(predicted_model)
+    # Fetch the predictions.
+    normal = X_test_visualize[predictions[:,0]==1]
+    hypothyroid = X_test_visualize[predictions[:,1]==1]
+    hyperthyroid = X_test_visualize[predictions[:,2]==1]
+
+    plt.scatter(normal[:,0], normal[:,1], color='blue', label='Normal')
+    plt.scatter(hypothyroid[:,0], hypothyroid[:,1], color='red', label='Hypothyroid')
+    plt.scatter(hyperthyroid[:,0], hyperthyroid[:,1], color='green', label='Hyperthyroid')
+    plt.title(f'Predicted output based on the {type(best_model).__name__} model')
+    plt.xlabel('Principal component 1')
+    plt.ylabel('Principal component 2')
+    plt.legend()
+    plt.show()    
 
 if __name__ == '__main__':
     findOptimalNumberOfFeatures()
-    print(optimal_PCA_numbers)
     plotAccuracyScores()
     parameterTuning()
     plotCVScores()
