@@ -2,7 +2,7 @@ import numpy as np
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import normalize, MinMaxScaler, StandardScaler
+from sklearn.preprocessing import normalize
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -28,8 +28,6 @@ X_train, X_val, Y_train, Y_val = train_test_split(
     X_train, Y_train, test_size=0.2, random_state=42)
 
 X_train_normalized = normalize(X_train)
-#X_train_scaled = MinMaxScaler().fit_transform(X_train)
-X_train_scaled = StandardScaler().fit_transform(X_train)
 
 
 classification_models = {'KNeighborsClassifier': KNeighborsClassifier(n_jobs=-1), 'DecisionTreeClassifier': DecisionTreeClassifier(),
@@ -128,8 +126,6 @@ def parameterTuning():
         classifier = GridSearchCV(
             classification_models[model], parameters[model], scoring='accuracy', n_jobs=-1, cv=10)
         classifier.fit(X_train_normalized, Y_train.ravel())
-        print(classifier.best_estimator_)
-        print(classifier.best_score_)
         # Add best parameter combination to dictionary.
         grid_searches.update({model: classifier.best_estimator_})
         # Add score of best parameters to dictionary
@@ -165,11 +161,13 @@ def trainBestModel():
     predictions = best_model.predict(X_test_normalized)
 
     X_test_virtualize = PCA(n_components=2).fit_transform(X_test)
-    benign = X_test_virtualize[predictions==0]
-    malign = X_test_virtualize[predictions==1]
+    benign = X_test_virtualize[predictions == 0]
+    malign = X_test_virtualize[predictions == 1]
 
-    plt.scatter(benign[:,0], benign[:,1], color='blue', label='Benign breast cancer')
-    plt.scatter(malign[:,0], malign[:,1], color='red', label='Malign breast cancer')
+    plt.scatter(benign[:, 0], benign[:, 1], color='blue',
+                label='Benign breast cancer')
+    plt.scatter(malign[:, 0], malign[:, 1], color='red',
+                label='Malign breast cancer')
     plt.title(f'Predictions based on the {type(best_model).__name__}')
     plt.xlabel('Principal component 1')
     plt.ylabel('Principal component 2')

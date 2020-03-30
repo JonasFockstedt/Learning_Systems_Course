@@ -24,38 +24,31 @@ mat = loadmat("Project Datasets/thyroidTrain.mat")
 
 Xtrain = mat["trainThyroidInput"]
 Ytrain = mat["trainThyroidOutput"]
-Xtest = mat["testThyroidInput"] 
+Xtest = mat["testThyroidInput"]
 
-#Split training data.
+# Split training data.
 Xtrain, Xval, Ytrain, Yval = train_test_split(
-    Xtrain, Ytrain, test_size=0.2, random_state=42) 
+    Xtrain, Ytrain, test_size=0.2, random_state=42)
 
 #print('Xtrain:\n', Xtrain)
 print(f'Shape of Xtrain: {Xtrain.shape}')
 print(f'Shape of Ytrain: {Ytrain.shape}')
 print(f'Shape of Xtest: {Xtest.shape}')
 
-#Normalize the data.
+# Normalize the data.
 Xtrain_normalized = normalize(Xtrain)
 Xtest_normalized = normalize(Xtest)
-print(f'Shape of Xtrain_normalize: {Xtrain_normalized.shape}')
-print(f'Shape of Xtest_normalize: {Xtest_normalized.shape}')
-
-pca = PCA()
-Xtrain_reduced = pca.fit_transform(Xtrain_normalized)
-Xtest_reduced = pca.fit_transform(Xtest_normalized)
-print(f'Shape of transformed Xtrain: {Xtrain_reduced.shape}')
-print(f'Shape of transformed Xtest: {Xtest_reduced.shape}')
 
 optimal_PCA_numbers = dict()
 grid_searches = dict()
 cv_scores = dict()
-classification_models = {'KNeighborsClassifier': KNeighborsClassifier(),'DecisionTreeClassifier': DecisionTreeClassifier(), 'RandomForestClassifier': RandomForestClassifier(n_jobs=-1),
-                        'MLPClassifier': MLPClassifier()}
-acc_scores = {'KNeighborsClassifier': [],  
-            'DecisionTreeClassifier': [], 'RandomForestClassifier': [], 'MLPClassifier': []}
-standard_deviation_scores = {'KNeighborsClassifier': [],  
-            'DecisionTreeClassifier': [], 'RandomForestClassifier': [], 'MLPClassifier': []}
+classification_models = {'KNeighborsClassifier': KNeighborsClassifier(), 'DecisionTreeClassifier': DecisionTreeClassifier(),
+                         'RandomForestClassifier': RandomForestClassifier(n_jobs=-1),
+                         'MLPClassifier': MLPClassifier()}
+acc_scores = {'KNeighborsClassifier': [],
+              'DecisionTreeClassifier': [], 'RandomForestClassifier': [], 'MLPClassifier': []}
+standard_deviation_scores = {'KNeighborsClassifier': [],
+                             'DecisionTreeClassifier': [], 'RandomForestClassifier': [], 'MLPClassifier': []}
 
 
 def findOptimalNumberOfFeatures():
@@ -95,7 +88,8 @@ def findOptimalNumberOfFeatures():
                 optimal_components = number_of_components
                 optimal_PCA_numbers.update(
                     {type(classification_models[model]).__name__: optimal_components})
-    
+
+
 def plotAccuracyScores():
     fig = plt.figure()
     fig.subplots_adjust(hspace=.5)
@@ -118,6 +112,7 @@ def plotAccuracyScores():
     plt.xlabel('Number of PCAs')
     plt.show()
 
+
 def parameterTuning():
     parametersKNN = {'n_neighbors': np.arange(
         1, 10, 1), 'weights': ('uniform', 'distance'), 'p': (1, 2)}
@@ -133,7 +128,7 @@ def parameterTuning():
 
     parameters = {'KNeighborsClassifier': parametersKNN, 'LinearSVC': parametersSVC, 'LogisticRegression': parametersLR, 'DecisionTreeClassifier': parametersDT,
                   'RandomForestClassifier': parametersRF,  'MLPClassifier': parametersMLP}
-    
+
     for model in classification_models.keys():
         print(f'Tuning the {model} model...')
         # Perform grid search.
@@ -146,7 +141,8 @@ def parameterTuning():
         grid_searches.update({model: classifier.best_estimator_})
         # Add score of best parameters to dictionary
         cv_scores.update({model: classifier.best_score_*100})
-    
+
+
 def plotCVScores():
     plt.ylabel('Accuracy (%)')
     plt.title('Cross-validation scores of classification models')
@@ -157,6 +153,7 @@ def plotCVScores():
         yval = bar.get_height()
         plt.text(bar.get_x(), yval + 0.05, yval)
     plt.show()
+
 
 def trainBestModel():
     # Fetch the best performing model.
@@ -176,18 +173,22 @@ def trainBestModel():
     X_test_visualize = PCA(n_components=2).fit_transform(Xtest_normalized)
 
     # Fetch the predictions.
-    normal = X_test_visualize[predictions[:,0]==1]
-    hypothyroid = X_test_visualize[predictions[:,1]==1]
-    hyperthyroid = X_test_visualize[predictions[:,2]==1]
+    normal = X_test_visualize[predictions[:, 0] == 1]
+    hypothyroid = X_test_visualize[predictions[:, 1] == 1]
+    hyperthyroid = X_test_visualize[predictions[:, 2] == 1]
 
-    plt.scatter(normal[:,0], normal[:,1], color='blue', label='Normal')
-    plt.scatter(hypothyroid[:,0], hypothyroid[:,1], color='red', label='Hypothyroid')
-    plt.scatter(hyperthyroid[:,0], hyperthyroid[:,1], color='green', label='Hyperthyroid')
-    plt.title(f'Predicted output based on the {type(best_model).__name__} model')
+    plt.scatter(normal[:, 0], normal[:, 1], color='blue', label='Normal')
+    plt.scatter(hypothyroid[:, 0], hypothyroid[:, 1],
+                color='red', label='Hypothyroid')
+    plt.scatter(hyperthyroid[:, 0], hyperthyroid[:, 1],
+                color='green', label='Hyperthyroid')
+    plt.title(
+        f'Predicted output based on the {type(best_model).__name__} model')
     plt.xlabel('Principal component 1')
     plt.ylabel('Principal component 2')
     plt.legend()
-    plt.show()    
+    plt.show()
+
 
 if __name__ == '__main__':
     findOptimalNumberOfFeatures()

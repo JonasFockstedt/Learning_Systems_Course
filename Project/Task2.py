@@ -1,10 +1,10 @@
 import numpy as np
 from scipy.io import loadmat
 from sklearn.feature_selection import SelectKBest, f_regression
-from sklearn.decomposition import PCA, KernelPCA
+from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold, cross_val_score, train_test_split, GridSearchCV
 import matplotlib.pylab as plt
-from sklearn.preprocessing import StandardScaler, normalize, Normalizer
+from sklearn.preprocessing import normalize
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor

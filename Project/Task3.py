@@ -2,7 +2,7 @@ import matplotlib.pylab as plt
 import numpy as np
 from scipy.io import loadmat
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import normalize, MinMaxScaler, StandardScaler
+from sklearn.preprocessing import normalize
 from sklearn.svm import SVR
 from sklearn.model_selection import KFold, cross_val_score, train_test_split, GridSearchCV
 from sklearn.neural_network import MLPRegressor
@@ -32,7 +32,6 @@ X_power_train, X_power_val, Y_power_train, Y_power_val = train_test_split(
     X_power_train, Y_power_train, test_size=0.2, random_state=42)
 
 X_power_train_normalized = normalize(X_power_train)
-X_power_train_scaled = MinMaxScaler().fit_transform(X_power_train)
 
 
 regression_models = {'SVR': SVR(), 'SGDRegressor': SGDRegressor(),
@@ -172,15 +171,17 @@ def trainBestModel():
     plt.title(f'Predicted output based on {type(best_model).__name__}')
     plt.xlabel('Day')
     plt.ylabel('Power load (MW)')
-    plt.plot(np.arange(0, len(X_power_test[:,0]), 1), X_power_test[:,0], color='blue', label='Power load today')
-    plt.plot(np.arange(1, len(predictions)+1, 1), predictions, color='red', label='Predicted power load the next day')
+    plt.plot(np.arange(0, len(X_power_test[:, 0]), 1),
+             X_power_test[:, 0], color='blue', label='Power load today')
+    plt.plot(np.arange(1, len(predictions)+1, 1), predictions,
+             color='red', label='Predicted power load the next day')
     plt.legend()
     plt.show()
 
 
 if __name__ == '__main__':
     findOptimalNumberOfFeatures()
-    # plotMSEScores()
+    plotMSEScores()
     parameterTuning()
     plotCVScores()
     trainBestModel()
