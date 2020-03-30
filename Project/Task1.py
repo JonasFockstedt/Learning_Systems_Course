@@ -38,22 +38,25 @@ Xtest_normalized = normalize(Xtest)
 optimal_PCA_numbers = dict()
 grid_searches = dict()
 cv_scores = dict()
-regression_models = {'LinearRegression': LinearRegression(n_jobs=-1), 'SVR': SVR(), 'DecisionTreeRegressor': DecisionTreeRegressor(), 'MLPRegressor': MLPRegressor(), 'KNeighborsRegressor': KNeighborsRegressor(n_jobs=-1), 'Ridge': Ridge()}
+regression_models = {'LinearRegression': LinearRegression(n_jobs=-1), 'SVR': SVR(), 'DecisionTreeRegressor': DecisionTreeRegressor(),
+                     'MLPRegressor': MLPRegressor(), 'KNeighborsRegressor': KNeighborsRegressor(n_jobs=-1), 'Ridge': Ridge()}
 
 
 def findOptimalNumberOfFeatures():
     lowest_mse = 0
     mse = []
     standard_deviations = []
-    
+
     fig.subplots_adjust(hspace=.5)
     rndm_state = randint(0, 100)
 
     for fig_number, model in enumerate(regression_models.keys(), 1):
-        print(f'Finding optimal number of features for {type(regression_models[model]).__name__} model...')
+        print(
+            f'Finding optimal number of features for {type(regression_models[model]).__name__} model...')
         # Things to set up for every model.
         kf_10 = KFold(n_splits=10, shuffle=True, random_state=rndm_state)
-        optimal_PCA_numbers.update({type(regression_models[model]).__name__: 0})
+        optimal_PCA_numbers.update(
+            {type(regression_models[model]).__name__: 0})
         mse, standard_deviations = [], []
         optimal_components = 0
         lowest_mse = 0
@@ -102,35 +105,43 @@ def parameterTuning():
     parametersLR = {'fit_intercept': ('True', 'False')}
     parametersSVR = {'kernel': ('linear', 'rbf'), 'C': np.arange(
         1, 10, 1), 'epsilon': np.arange(0, 1, 0.1)}
-    parametersDT = {'criterion': ('mse', 'friedman_mse'), 'splitter': ('best', 'random')}
+    parametersDT = {'criterion': (
+        'mse', 'friedman_mse'), 'splitter': ('best', 'random')}
     parametersMLP = {'activation': ('identity', 'logistic')}
-    parametersKNN = {'n_neighbors': np.arange(1,10,1), 'p': [1,2]}
+    parametersKNN = {'n_neighbors': np.arange(1, 10, 1), 'p': [1, 2]}
     parametersRidge = {'solver': ('auto', 'svd', 'sag')}
 
     # Grouping the parameters together.
-    parameters = {'LinearRegression': parametersLR, 'SVR': parametersSVR, 'DecisionTreeRegressor': parametersDT, 'MLPRegressor': parametersMLP, 'KNeighborsRegressor': parametersKNN, 'Ridge': parametersRidge}
+    parameters = {'LinearRegression': parametersLR, 'SVR': parametersSVR, 'DecisionTreeRegressor': parametersDT,
+                  'MLPRegressor': parametersMLP, 'KNeighborsRegressor': parametersKNN, 'Ridge': parametersRidge}
     for model in regression_models.keys():
         print(f'Tuning {type(regression_models[model]).__name__}...')
         # Transform Xtrain based on the optimal number of features calculated previously.
         pca = PCA(n_components=optimal_PCA_numbers[model])
         Xtrain_reduced = pca.fit_transform(Xtrain_normalized)
         # Perform grid search.
-        regr = GridSearchCV(regression_models[model], parameters[model], scoring='neg_root_mean_squared_error', n_jobs=-1, cv=10)
+        regr = GridSearchCV(regression_models[model], parameters[model],
+                            scoring='neg_root_mean_squared_error', n_jobs=-1, cv=10)
         regr.fit(Xtrain_reduced, Ytrain)
         # Add best parameter combination to dictionary.
-        grid_searches.update({type(regression_models[model]).__name__: regr.best_estimator_})
+        grid_searches.update(
+            {type(regression_models[model]).__name__: regr.best_estimator_})
         # Add score of best parameters to dictionary
-        cv_scores.update({type(regression_models[model]).__name__: regr.best_score_})
+        cv_scores.update(
+            {type(regression_models[model]).__name__: regr.best_score_})
+
 
 def plotCVScores():
     plt.ylabel('Mean squared error regression loss (higher is better)')
     plt.title('Cross-validation scores of regression models')
-    bars = plt.bar(list(cv_scores.keys()), list(cv_scores.values()), align='center')
+    bars = plt.bar(list(cv_scores.keys()), list(
+        cv_scores.values()), align='center')
     # Add value above every bar.
     for bar in bars:
         yval = bar.get_height()
         plt.text(bar.get_x(), yval + 0.05, yval)
     plt.show()
+
 
 def trainModel():
     # Fetch best performing model.
@@ -141,20 +152,38 @@ def trainModel():
     Xval_normalized = normalize(Xval)
     Xval_reduced = pca.fit_transform(Xval_normalized)
     kf_10 = KFold(n_splits=10, shuffle=True, random_state=42)
-    # Run 10-fold cross validation.
-    score = cross_val_score(the_model, Xval_reduced, Yval.ravel(), cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()
-    print(f'Mean validation score of the {type(the_model).__name__} model: {score} (MSE).')
 
+    # Run 10-fold cross validation.
+    score = cross_val_score(the_model, Xval_reduced, Yval.ravel(
+    ), cv=kf_10, scoring='neg_mean_squared_error', n_jobs=-1).mean()
+    print(
+        f'Mean validation score of the {type(the_model).__name__} model: {score} (MSE).')
+
+    the_model.fit(pca.fit_transform(Xtrain_normalized), Ytrain)
     Xtest_reduced = pca.fit_transform(Xtest_normalized)
     predictions = the_model.predict(Xtest_reduced)
-    
+
+    pca = PCA(n_components=2)
+    Xtest_to_visualize = pca.fit_transform(Xtest)
+
     print(f'Predictions: \n{predictions}')
-    plt.title(f'Predicted output based on {type(the_model).__name__}')
-    plt.xlabel('Observation number')
-    plt.ylabel('Cetane number')
-    plt.plot(predictions, color='red')
+
+    fig = plt.figure()
+    fig.subplots_adjust(hspace=.5)
+    ax1 = fig.add_subplot(2, 1, 1)
+    ax2 = fig.add_subplot(2, 1, 2)
+    ax1.title.set_text('Input of test data')
+    ax1.set_ylabel('Principal component 1')
+    ax1.set_xlabel('Observation sample')
+    ax1.plot(Xtest_to_visualize[:, 0], color='blue')
+
+    ax2.title.set_text('Predicted output of test data')
+    ax2.set_ylabel('Cetane number')
+    ax2.set_xlabel('Observation sample')
+    ax2.plot(predictions, color='red')
+    plt.legend()
     plt.show()
-    
+
 
 if __name__ == '__main__':
     print('***FINDING OPTIMAL NUMBER OF FEATURES FOR EACH MODEL...***')
