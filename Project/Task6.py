@@ -9,7 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score, KFold, GridSearchCV, train_test_split
-from sklearn.preprocessing import normalize, MinMaxScaler, StandardScaler
+from sklearn.preprocessing import normalize
 
 mat = loadmat('Project Datasets/ECGITtrain.mat')
 
@@ -59,7 +59,6 @@ acc_scores = {'KNeighborsClassifier': [], 'DecisionTreeClassifier': [],
               'RandomForestClassifier': [], 'SVC': [], 'LogisticRegression': [], 'MLPClassifier': []}
 standard_deviation_scores = {'KNeighborsClassifier': [], 'DecisionTreeClassifier': [],
                              'RandomForestClassifier': [], 'SVC': [], 'LogisticRegression': [], 'MLPClassifier': []}
-
 
 
 def findOptimalFeatures():
@@ -132,10 +131,10 @@ def parameterTuning():
         'gini', 'entropy'), 'splitter': ('best', 'random')}
     parametersRF = {'n_estimators': np.arange(
         50, 200, 50), 'criterion': ('gini', 'entropy')}
-    parametersSVC = {'C': np.arange(1, 20, 1), 'kernel': (
-        'linear', 'poly'), 'gamma': ('scale', 'auto')}
-    parametersLR = {'penalty': ('l1', 'l2'), 'C': np.arange(
-        1, 10, 1), 'solver': ('lbfgs', 'liblinear')}
+    parametersSVC = {'C': np.arange(1, 10, 1), 'kernel': ('linear', 'poly'),
+                     'gamma': ('scale', 'auto')}
+    parametersLR = {'penalty': ('l1', 'l2'), 'C': np.arange(1, 10, 1),
+                    'solver': ('lbfgs', 'liblinear')}
     parametersMLP = {'solver': ('lbfgs', 'sgd', 'adam'),
                      'alpha': np.arange(0.00005, 0.001, 0.0005)}
 

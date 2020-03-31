@@ -111,7 +111,7 @@ def plotMSEScores():
 
 def parameterTuning():
     print('***TUNING PARAMETERS...***')
-    parametersSVR = {'kernel': ('linear', 'rbf'), 'degree': np.arange(1, 5, 1), 'gamma': (
+    parametersSVR = {'gamma': (
         'scale', 'auto'), 'C': np.arange(1, 10, 1), 'epsilon': np.arange(0, 10, 0.1)}
     parametersSGD = {'alpha': np.arange(0.00001, 0.005, 0.0005), 'max_iter': np.arange(
         1000, 5000, 500), 'epsilon': np.arange(0.01, 1, 0.05)}
