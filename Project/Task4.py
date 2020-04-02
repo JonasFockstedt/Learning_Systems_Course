@@ -167,6 +167,7 @@ def trainBestModel():
                                 Yval, cv=kf_10, scoring='accuracy', n_jobs=-1).mean()
     print(
         f'Average validation score of the {type(best_model).__name__} model: {score} (accuracy %).')
+    print(f'Best model: \n{best_model}')
 
     Xtest_normalized = normalize(Xtest)
     predictions = best_model.predict(Xtest_normalized)

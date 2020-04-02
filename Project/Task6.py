@@ -63,7 +63,6 @@ standard_deviation_scores = {'KNeighborsClassifier': [], 'DecisionTreeClassifier
 
 def findOptimalFeatures():
     print('***FINDING OPTIMAL NUMBER OF FEATURES FOR EACH MODEL***')
-    #rndm_state = randint(0, 100)
 
     for model in classification_models.keys():
         print(
@@ -183,6 +182,7 @@ def trainBestModel():
     predictions = best_model.predict(X_test_normalized)
 
     print(f'Prediction: \n{predictions}')
+    print(f'Best model: \n{best_model}')
 
     X_test_visualize = PCA(n_components=2).fit_transform(X_test)
 
@@ -202,8 +202,8 @@ def trainBestModel():
 
 if __name__ == '__main__':
     findOptimalFeatures()
-    # plotAccuracyScores()
+    plotAccuracyScores()
     parameterTuning()
-    # plotCVScores()
+    plotCVScores()
     trainBestModel()
     pass

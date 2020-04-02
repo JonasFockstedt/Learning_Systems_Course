@@ -166,6 +166,8 @@ def trainBestModel():
 
     X_power_test_normalized = normalize(X_power_test)
     predictions = best_model.predict(X_power_test_normalized)
+
+    print(f'Best model: \n{best_model}')
     print(f'Predictions: \n{predictions}')
 
     plt.title(f'Predicted output based on {type(best_model).__name__}')

@@ -166,6 +166,7 @@ def trainModel():
     pca = PCA(n_components=2)
     Xtest_to_visualize = pca.fit_transform(Xtest)
 
+    print(f'Best model: \n{the_model}')
     print(f'Predictions: \n{predictions}')
 
     fig = plt.figure()

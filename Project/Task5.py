@@ -173,6 +173,7 @@ def trainBestModel():
     plt.ylabel('Principal component 2')
     plt.legend()
     print(f'Prediction: \n{predictions}')
+    print(f'Best model: \n{best_model}')
     plt.show()
 
 
